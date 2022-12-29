@@ -50,7 +50,7 @@
             </geometry>
         </collision>
     </link>
-    <joint name="Torso_BacktLeg" type="revolute">
+    <joint name="Torso_BackLeg" type="revolute">
        <parent link="Torso"/>
        <child  link="BackLeg"/>
        <origin rpy="0 0 0" xyz="1.0 0 1.0" />

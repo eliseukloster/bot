@@ -4,6 +4,7 @@ import pybullet as p
 import pybullet_data
 from time import sleep
 import pyrosim.pyrosim as pyrosim
+from pyrosim.neuralNetwork import NEURAL_NETWORK
 import numpy as np
 import random
 import constants as const
@@ -20,9 +21,9 @@ class Simulation:
         for i in range(const.total_iterations):
             p.stepSimulation()
             self.robot.sense(i)
+            self.robot.think()
             self.robot.act(i)
             sleep(const.tickRateSeconds)
-            print(i)
         if const.save:
             self.robot.save_sensors()
             self.robot.save_motors()
@@ -45,6 +46,7 @@ class Robot:
         pyrosim.Prepare_To_Simulate(self.id)
         self.Prepare_To_Sense()
         self.Prepare_To_Act()
+        self.nn = NEURAL_NETWORK('brain.nndf')
 
     def Prepare_To_Sense(self) -> None:
         self.sensors = defaultdict(Sensor)
@@ -60,13 +62,21 @@ class Robot:
         for sensor in self.sensors.values():
             sensor.values[i] = pyrosim.Get_Touch_Sensor_Value_For_Link(sensor.name)
 
+    def think(self) -> None:
+        self.nn.Update()
+        #self.nn.Print()
+
     def act(self, i: int) -> None:
-        for joint in self.joints.values():
-            pyrosim.Set_Motor_For_Joint(bodyIndex = self.id,
-                                    jointName = joint.name,
-                                    controlMode = p.POSITION_CONTROL,
-                                    targetPosition = joint.values[i],
-                                    maxForce = 50)
+
+        for neuronName in self.nn.Get_Neuron_Names():
+            if self.nn.Is_Motor_Neuron(neuronName):
+                jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
+                desiredAngle = self.nn.Get_Value_Of(neuronName)
+                pyrosim.Set_Motor_For_Joint(bodyIndex = self.id,
+                        jointName = bytes(jointName, 'utf-8'),
+                        controlMode = p.POSITION_CONTROL,
+                        targetPosition = desiredAngle,
+                        maxForce = 50)
     
     def save_sensors(self) -> None:
         for sensor in self.sensors.values():

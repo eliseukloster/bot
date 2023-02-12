@@ -11,8 +11,11 @@ import constants as const
 from collections import defaultdict
 
 class Simulation:
-    def __init__(self) -> None:
-        self.physicsClient = p.connect(p.GUI)
+    def __init__(self, connection='DIRECT') -> None:
+        if connection == 'GUI':
+            self.physicsClient = p.connect(p.GUI)
+        else:
+            self.physicsClient = p.connect(p.DIRECT)
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0,0,-9.80665)
         self.world = World()
@@ -24,9 +27,13 @@ class Simulation:
             self.robot.think()
             self.robot.act(i)
             sleep(const.tickRateSeconds)
+            p.resetDebugVisualizerCamera( cameraDistance=9, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[-0.005*i,0,0])
         if const.save:
             self.robot.save_sensors()
             self.robot.save_motors()
+    def get_fitness(self) -> None:
+        self.robot.get_fitness()
+
     def __del__(self):
         p.disconnect()
 
@@ -82,9 +89,14 @@ class Robot:
         for sensor in self.sensors.values():
             sensor.save()
     def save_motors(self) -> None:
-        print('inside motors')
         for motor in self.joints.values():
             motor.save()
+
+    def get_fitness(self):
+        xyz = p.getLinkState(self.id,0)[0]
+        xCoordinateLink0 = xyz[0]
+        with open('fitness.txt', 'w') as f:
+            f.write(str(xCoordinateLink0))
 
 class Sensor:
     def __init__(self, name: str) -> None:

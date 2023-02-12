@@ -9,10 +9,12 @@ def npsave(name, data):
 savepath = 'data/'
 save = False
 
-total_iterations = 100
+total_iterations = 5000
 gravity = -9.80665 # CODATA :P
 
 backAmp, backF, backPhase = np.pi/4, 20, 0
 frontAmp, frontF, frontPhase = np.pi/4, 10, np.pi/2
 
 tickRateSeconds = 1/240
+
+total_generations = 100

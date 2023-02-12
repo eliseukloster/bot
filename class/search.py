@@ -13,7 +13,6 @@ class Climber():
     def evolve(self) -> None:
         self.parent.evaluate()
         for currGen in range(const.total_generations):
-            print('='*15)
             print(f'PARENT {currGen}: ')
             print(self.parent.weights)
             self.evolve_step()
@@ -24,8 +23,9 @@ class Climber():
         self.spawn()
         self.mutate()
         self.child.evaluate()
-        print('='*15)
+        print('')
         print(f'PARENT: {self.parent.fitness}; CHILD: {self.child.fitness}')
+        print('='*15)
         self.select()
 
     def spawn(self) -> None:

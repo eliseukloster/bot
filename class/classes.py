@@ -7,6 +7,7 @@ import pyrosim.pyrosim as pyrosim
 from pyrosim.neuralNetwork import NEURAL_NETWORK
 import numpy as np
 import random
+import supress
 import constants as const
 from collections import defaultdict
 
@@ -40,10 +41,11 @@ class Simulation:
 
 class World:
     def __init__(self, world_path = "world.sdf", plane_path = 'plane.urdf') -> None:
-        if world_path:
-            self.world = p.loadSDF(world_path)
-        if plane_path:
-            self.plane = p.loadURDF(plane_path)
+        with supress.stdout_redirected():
+            if world_path:
+                self.world = p.loadSDF(world_path)
+            if plane_path:
+                self.plane = p.loadURDF(plane_path)
 
 class Robot:
     def __init__(self, body_path = 'body.urdf') -> None:
@@ -120,7 +122,6 @@ class Motor:
         self.values = np.sin(np.linspace(0, 2*np.pi, num=const.total_iterations)*self.frequency + self.phase)*self.amplitude
     def save(self) -> None:
         const.npsave(const.savepath+str(self.name)[2:-1], self.values)
-
 
 
 

@@ -1,2 +1,6 @@
 botenv/
 *.pyc
+*.urdf
+*.sdf
+*.csv
+*fitness.txt

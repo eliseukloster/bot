@@ -25,10 +25,10 @@ class Simulation:
         self.robot = Robot()
 
     def run(self) -> None:
-        """
+        '''
         Runs the simulation by stepping the physics engine
         and executing robot's actions.
-        """
+        '''
         for i in range(const.total_iterations):
             p.stepSimulation()
             self.robot.sense(i)
@@ -42,21 +42,21 @@ class Simulation:
             self.robot.save_motors()
 
     def get_fitness(self) -> None:
-        """
+        '''
         Evaluates the robot's fitness function.
-        """
+        '''
         self.robot.get_fitness()
 
     def __del__(self) -> None:
-        """
+        '''
         Disconnects from the physics client before deleting.
-        """
+        '''
         p.disconnect()
 
 class World:
-    """
+    '''
     Loads sdf files to the world.
-    """
+    '''
     def __init__(self, world_path = "world.sdf", plane_path = 'plane.urdf') -> None:
         with supress.stdout_redirected():
             if world_path:
@@ -65,9 +65,9 @@ class World:
                 self.plane = p.loadURDF(plane_path)
 
 class Robot:
-    """
+    '''
     Creates a robot with a neural network.
-    """
+    '''
     def __init__(self, body_path = 'body.urdf') -> None:
         if body_path:
             self.id = p.loadURDF(body_path)
@@ -77,39 +77,39 @@ class Robot:
         self.nn = NEURAL_NETWORK('brain.nndf')
 
     def Prepare_To_Sense(self) -> None:
-        """"
+        '''"
         Creates sensors for the robot.
-        """
+        '''
         self.sensors = defaultdict(Sensor)
         for linkName in pyrosim.linkNamesToIndices:
             self.sensors[linkName] = Sensor(linkName)
 
     def Prepare_To_Act(self) -> None:
-        """
+        '''
         Creates joints for the robot.
-        """
+        '''
         self.motors = defaultdict(Motor)
         for jointName in pyrosim.jointNamesToIndices:
             self.motors[jointName] = Motor(jointName)
 
     def sense(self, i: int) -> None:
-        """
+        '''
         Captures the sensor values and stores them.
-        """
+        '''
         for sensor in self.sensors.values():
             sensor.values[i] = pyrosim.Get_Touch_Sensor_Value_For_Link(sensor.name)
 
     def think(self) -> None:
-        """
+        '''
         Steps the neural network.
-        """
+        '''
         self.nn.Update()
         #self.nn.Print()
 
     def act(self, i: int) -> None:
-        """
+        '''
         Actuates the motors based on neural network.
-        """
+        '''
         for neuronName in self.nn.Get_Neuron_Names():
             if self.nn.Is_Motor_Neuron(neuronName):
                 jointName = self.nn.Get_Motor_Neurons_Joint(neuronName)
@@ -122,53 +122,49 @@ class Robot:
                 self.motors[bytes(jointName, 'utf-8')].values[i] = desiredAngle
 
     def save_sensors(self) -> None:
-        """
+        '''
         Saves sensor values.
-        """
+        '''
         for sensor in self.sensors.values():
             sensor.save()
     def save_motors(self) -> None:
-        """
+        '''
         Saves motor positions.
-        """
+        '''
         for motor in self.motors.values():
             motor.save()
 
     def get_fitness(self) -> None:
-        """
+        '''
         Evaluates the fitness function of the robot.
-        """
+        '''
         xyz = p.getLinkState(self.id,0)[0]
         xCoordinateLink0 = xyz[0]
         with open('fitness.txt', 'w') as f:
             f.write(str(xCoordinateLink0))
 
 class Sensor:
-    """
+    '''
     Creates a robot sensor.
-    """
+    '''
     def __init__(self, name: str) -> None:
         self.name = name
         self.values = np.zeros(const.total_iterations)
     def save(self) -> None:
-        """
+        '''
         Saves the sensor values.
-        """
+        '''
         const.npsave(const.savepath+self.name, self.values)
 
 class Motor:
-    """
+    '''
     Creates a robot motor.
-    """
+    '''
     def __init__(self, name: str) -> None:
         self.name = name
         self.values = np.zeros(const.total_iterations)
     def save(self) -> None:
-        """
+        '''
         Saves the motor values.
-        """
+        '''
         const.npsave(const.savepath+str(self.name)[2:-1], self.values)
-
-
-
-        

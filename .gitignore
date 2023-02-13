@@ -3,5 +3,6 @@ botenv/
 *.urdf
 *.sdf
 *.csv
+*.nndf
 *fitness.txt
 *.gif

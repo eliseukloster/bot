@@ -6,18 +6,18 @@ from copy import deepcopy
 from random import randint
 
 class Climber():
-    """
+    '''
     Evolves a robot by modifying the neurons weights
     and selecting the sets that best minimize a fitness function.
-    """
+    '''
     def __init__(self) -> None:
         self.parent = Solution()
         self.history = self.parent.weights.reshape((1,-1))
 
     def evolve(self) -> None:
-        """
+        '''
         Evolve generations and saves a history of all weights.
-        """
+        '''
         self.parent.evaluate()
         for currGen in range(const.total_generations):
             print(f'PARENT {currGen}: ')
@@ -27,9 +27,9 @@ class Climber():
         np.savetxt('weights.csv', self.history, delimiter=',')
 
     def evolve_step(self) -> None:
-        """
+        '''
         Spawn and mutates a child. Selects the best between parent and child.
-        """
+        '''
         self.spawn()
         self.mutate()
         self.child.evaluate()
@@ -39,21 +39,21 @@ class Climber():
         self.select()
 
     def spawn(self) -> None:
-        """
+        '''
         Spawns the child.
-        """
+        '''
         self.child = deepcopy(self.parent)
 
     def mutate(self) -> None:
-        """
+        '''
         Mutates the child.
-        """
+        '''
         self.child.mutate()
 
     def select(self) -> None:
-        """
+        '''
         Selects the best between parent and child.
-        """
+        '''
         if self.child.fitness < self.parent.fitness:
             self.parent = self.child
 
@@ -67,10 +67,10 @@ class Solution():
         self.X, self.Y, self.Z = 0,0, self.H/2
 
     def evaluate(self) -> None:
-        """
+        '''
         Calculates the fitness of the current solution
         and saves it to a file fitness.txt.
-        """
+        '''
         self.Create_World()
         self.Create_Robot(1.5,0,1.5)
         self.Create_Brain()
@@ -79,23 +79,23 @@ class Solution():
             self.fitness = float(f.read())     
 
     def mutate(self) -> None:
-        """
+        '''
         Randomly select one of the weights to replace by a new random value. 
-        """
+        '''
         self.weights[randint(0,2), randint(0,1)] = np.random.randn()
 
     def Create_World(self) -> None:
-        """
+        '''
         Creates a new sdf world with a box.
-        """
+        '''
         pyrosim.Start_SDF('world.sdf')
         pyrosim.Send_Cube(name=f'Box', pos=[self.X-5,self.Y-5,self.Z], size=[self.L,self.W,self.H])
         pyrosim.End()
 
     def Create_Robot(self, xtorso: float, ytorso: float, ztorso: float) -> None:
-        """
+        '''
         Creates a urdf robot with thre cube links and two joints.
-        """
+        '''
         pyrosim.Start_URDF('body.urdf')
         pyrosim.Send_Cube(name=f'Torso', pos=[xtorso, ytorso, ztorso], size=[self.L,self.W,self.H])
         pyrosim.Send_Joint( name = "Torso_FrontLeg",
@@ -115,9 +115,9 @@ class Solution():
         pyrosim.End()
 
     def Create_Brain(self) -> None:
-        """
+        '''
         Creates a neural network for the previously created robot.
-        """
+        '''
         pyrosim.Start_NeuralNetwork("brain.nndf")
         pyrosim.Send_Sensor_Neuron(name = 0 , linkName = "Torso")
         pyrosim.Send_Sensor_Neuron(name = 1 , linkName = "BackLeg")
@@ -129,7 +129,6 @@ class Solution():
                 pyrosim.Send_Synapse( sourceNeuronName = sensor , targetNeuronName = motor , weight = self.weights[sensor][motor-3] )
         pyrosim.End()
 
-
 if '__name__' == '__main__':
     climber = Climber()
     climber.evolve()
@@ -139,4 +138,3 @@ if '__name__' == '__main__':
     system('python3 simulate.py -g')
     Solution(weights[-1])
     system('python3 simulate.py -g')
-

@@ -10,9 +10,11 @@ import random
 import supress
 import constants as const
 from collections import defaultdict
+from os import remove
 
 class Simulation:
-    def __init__(self, connection: str = 'DIRECT') -> None:
+    def __init__(self, id: int, connection: str = 'DIRECT') -> None:
+        self.id = id
         if connection == 'GUI':
             self.physicsClient = p.connect(p.GUI)
             self.useGUI = True
@@ -21,9 +23,10 @@ class Simulation:
             self.useGUI = False
         p.setAdditionalSearchPath(pybullet_data.getDataPath())
         p.setGravity(0,0,-9.80665)
-        self.world = World()
-        self.robot = Robot()
-
+        self.world = World(f'world{self.id}.sdf')
+        self.robot = Robot(f'body{self.id}.urdf', f'brain{self.id}.nndf')
+        for file_name in [f'world{self.id}.sdf', f'body{self.id}.urdf', f'brain{self.id}.nndf']:
+            remove(file_name)
     def run(self) -> None:
         '''
         Runs the simulation by stepping the physics engine
@@ -68,13 +71,13 @@ class Robot:
     '''
     Creates a robot with a neural network.
     '''
-    def __init__(self, body_path: str = 'body.urdf') -> None:
+    def __init__(self, body_path: str = 'body.urdf', brain_path: str = 'brain.nndf') -> None:
         if body_path:
             self.id = p.loadURDF(body_path)
         pyrosim.Prepare_To_Simulate(self.id)
         self.Prepare_To_Sense()
         self.Prepare_To_Act()
-        self.nn = NEURAL_NETWORK('brain.nndf')
+        self.nn = NEURAL_NETWORK(brain_path)
 
     def Prepare_To_Sense(self) -> None:
         '''"

@@ -8,13 +8,13 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument('-g', '--gui', default='', action='store_const', const=['GUI'])
 
-def main(args=None, connection: Connection | None = None):
+def main(id: int, args=None, connection: Connection | None = None):
     if args:
         args = parser.parse_args(args)
     else:
         args = parser.parse_args()
 
-    simulation = Simulation(*args.gui)
+    simulation = Simulation(id, *args.gui)
     simulation.run()
     fitness = simulation.get_fitness()
     if connection:
@@ -23,4 +23,4 @@ def main(args=None, connection: Connection | None = None):
     del simulation
 
 if __name__ == '__main__':
-    main()
+    main(0)

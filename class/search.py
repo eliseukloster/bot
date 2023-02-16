@@ -13,8 +13,9 @@ class Climber():
     Evolves a robot by modifying the neurons weights
     and selecting the sets that best minimize a fitness function.
     '''
-    def __init__(self) -> None:
-        self.parent = Solution()
+    def __init__(self, id: int) -> None:
+        self.id = id
+        self.parent = Solution(self.id)
         self.history = self.parent.weights.reshape((1,-1))
     def evolve(self) -> None:
         '''
@@ -27,7 +28,7 @@ class Climber():
             print(self.parent.weights)
             self.evolve_step()
             self.history = np.vstack((self.history, self.parent.weights.reshape((1,-1))))
-        np.savetxt('weights.csv', self.history, delimiter=',')
+        np.savetxt(f'weights{self.id}.csv', self.history, delimiter=',')
 
     def evolve_step(self) -> None:
         '''
@@ -62,7 +63,8 @@ class Climber():
             self.parent = self.child
 
 class Solution():
-    def __init__(self,  weights: np.ndarray | None = None) -> None:
+    def __init__(self,  id: int, weights: np.ndarray | None = None) -> None:
+        self.id = id
         if weights is None:
             self.weights = 2*np.random.randn(3, 2)
         else:
@@ -79,7 +81,7 @@ class Solution():
         self.Create_Robot(1.5,0,1.5)
         self.Create_Brain()
         self.parent_connection, child_connection = Pipe()
-        self.sim = Process(target=simulate.main, args=(args, child_connection))
+        self.sim = Process(target=simulate.main, args=(self.id, args, child_connection))
         self.sim.start()
 
     def join(self) -> None:
@@ -98,7 +100,7 @@ class Solution():
         '''
         Creates a new sdf world with a box.
         '''
-        pyrosim.Start_SDF('world.sdf')
+        pyrosim.Start_SDF(f'world{self.id}.sdf')
         pyrosim.Send_Cube(name=f'Box', pos=[self.X-5,self.Y-5,self.Z], size=[self.L,self.W,self.H])
         pyrosim.End()
 
@@ -106,7 +108,7 @@ class Solution():
         '''
         Creates a urdf robot with thre cube links and two joints.
         '''
-        pyrosim.Start_URDF('body.urdf')
+        pyrosim.Start_URDF(f'body{self.id}.urdf')
         pyrosim.Send_Cube(name=f'Torso', pos=[xtorso, ytorso, ztorso], size=[self.L,self.W,self.H])
         pyrosim.Send_Joint( name = "Torso_FrontLeg",
                             parent= "Torso",
@@ -128,7 +130,7 @@ class Solution():
         '''
         Creates a neural network for the previously created robot.
         '''
-        pyrosim.Start_NeuralNetwork("brain.nndf")
+        pyrosim.Start_NeuralNetwork(f'brain{self.id}.nndf')
         pyrosim.Send_Sensor_Neuron(name = 0 , linkName = "Torso")
         pyrosim.Send_Sensor_Neuron(name = 1 , linkName = "BackLeg")
         pyrosim.Send_Sensor_Neuron(name = 2 , linkName = "FrontLeg")
@@ -140,13 +142,15 @@ class Solution():
         pyrosim.End()
 
 if __name__ == '__main__':
-    climber = Climber()
+    climber = Climber(0)
     climber.evolve()
 
-    weights = np.loadtxt('weights.csv', delimiter=',')
-    s1 = Solution(weights[0])
-    s1.evaluate(['--gui'])
-    s1.join()
-    s2 = Solution(weights[-1])
-    s2.evaluate(['--gui'])
-    s2.join()
+    weights = np.loadtxt('weights0.csv', delimiter=',')
+    import supress
+    with supress.stdout_redirected():
+        s1 = Solution(0, weights[0])
+        s1.evaluate(['--gui'])
+        s1.join()
+        s2 = Solution(0, weights[-1])
+        s2.evaluate(['--gui'])
+        s2.join()

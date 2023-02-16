@@ -17,18 +17,20 @@ class Climber():
         self.id = id
         self.parent = Solution(self.id)
         self.history = self.parent.weights.reshape((1,-1))
-    def evolve(self) -> None:
+    def evolve(self) -> float:
         '''
         Evolve generations and saves a history of all weights.
         '''
         self.parent.evaluate()
         self.parent.join()
         for currGen in range(const.total_generations):
-            print(f'PARENT {currGen}: ')
-            print(self.parent.weights)
+            if currGen % 10 == 0 and self.id % 5 == 0:
+                print(f'PARENT {currGen}: ')
+                print(self.parent.weights)
             self.evolve_step()
             self.history = np.vstack((self.history, self.parent.weights.reshape((1,-1))))
         np.savetxt(f'weights{self.id}.csv', self.history, delimiter=',')
+        return self.parent.fitness
 
     def evolve_step(self) -> None:
         '''
@@ -38,9 +40,9 @@ class Climber():
         self.mutate()
         self.child.evaluate()
         self.child.join()
-        print('')
-        print(f'PARENT: {self.parent.fitness}; CHILD: {self.child.fitness}')
-        print('='*15)
+        #print('')
+        #print(f'PARENT: {self.parent.fitness}; CHILD: {self.child.fitness}')
+        #print('='*15)
         self.select()
 
     def spawn(self) -> None:

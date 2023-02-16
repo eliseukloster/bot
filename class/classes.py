@@ -28,7 +28,7 @@ class Simulation:
         for file_name in [f'world{self.id}.sdf', f'body{self.id}.urdf', f'brain{self.id}.nndf']:
             remove(file_name)
     def run(self) -> None:
-        '''
+        '''self.robot.get_fitness
         Runs the simulation by stepping the physics engine
         and executing robot's actions.
         '''
@@ -44,7 +44,7 @@ class Simulation:
             self.robot.save_sensors()
             self.robot.save_motors()
 
-    def get_fitness(self) -> None:
+    def get_fitness(self) -> float:
         '''
         Evaluates the robot's fitness function.
         '''
@@ -137,7 +137,7 @@ class Robot:
         for motor in self.motors.values():
             motor.save()
 
-    def get_fitness(self) -> None:
+    def get_fitness(self) -> float:
         '''
         Evaluates the fitness function of the robot.
         '''

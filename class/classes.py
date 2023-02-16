@@ -12,7 +12,7 @@ import constants as const
 from collections import defaultdict
 
 class Simulation:
-    def __init__(self, connection='DIRECT') -> None:
+    def __init__(self, connection: str = 'DIRECT') -> None:
         if connection == 'GUI':
             self.physicsClient = p.connect(p.GUI)
             self.useGUI = True
@@ -45,7 +45,7 @@ class Simulation:
         '''
         Evaluates the robot's fitness function.
         '''
-        self.robot.get_fitness()
+        return self.robot.get_fitness()
 
     def __del__(self) -> None:
         '''
@@ -57,7 +57,7 @@ class World:
     '''
     Loads sdf files to the world.
     '''
-    def __init__(self, world_path = "world.sdf", plane_path = 'plane.urdf') -> None:
+    def __init__(self, world_path: str = "world.sdf", plane_path: str = 'plane.urdf') -> None:
         with supress.stdout_redirected():
             if world_path:
                 self.world = p.loadSDF(world_path)
@@ -68,7 +68,7 @@ class Robot:
     '''
     Creates a robot with a neural network.
     '''
-    def __init__(self, body_path = 'body.urdf') -> None:
+    def __init__(self, body_path: str = 'body.urdf') -> None:
         if body_path:
             self.id = p.loadURDF(body_path)
         pyrosim.Prepare_To_Simulate(self.id)
@@ -80,7 +80,7 @@ class Robot:
         '''"
         Creates sensors for the robot.
         '''
-        self.sensors = defaultdict(Sensor)
+        self.sensors = defaultdict(lambda: Sensor('flag'))
         for linkName in pyrosim.linkNamesToIndices:
             self.sensors[linkName] = Sensor(linkName)
 
@@ -88,7 +88,7 @@ class Robot:
         '''
         Creates joints for the robot.
         '''
-        self.motors = defaultdict(Motor)
+        self.motors = defaultdict(lambda: Motor('flag'))
         for jointName in pyrosim.jointNamesToIndices:
             self.motors[jointName] = Motor(jointName)
 
@@ -140,8 +140,9 @@ class Robot:
         '''
         xyz = p.getLinkState(self.id,0)[0]
         xCoordinateLink0 = xyz[0]
-        with open('fitness.txt', 'w') as f:
-            f.write(str(xCoordinateLink0))
+        #with open('fitness.txt', 'w') as f:
+        #    f.write(str(xCoordinateLink0))
+        return xCoordinateLink0
 
 class Sensor:
     '''

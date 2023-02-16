@@ -14,7 +14,8 @@ def npsave(name: str, data: np.ndarray) -> None:
 
 savepath = 'data/'
 save = False
-total_iterations = 5000
+total_iterations = 500
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
-total_generations = 100
+total_generations = 2
+population = 2

@@ -4,6 +4,9 @@ import pyrosim.pyrosim as pyrosim
 import constants as const
 from copy import deepcopy
 from random import randint
+from multiprocessing import Process
+from multiprocessing.connection import Connection, Pipe
+import simulate
 
 class Climber():
     '''
@@ -13,12 +16,12 @@ class Climber():
     def __init__(self) -> None:
         self.parent = Solution()
         self.history = self.parent.weights.reshape((1,-1))
-
     def evolve(self) -> None:
         '''
         Evolve generations and saves a history of all weights.
         '''
         self.parent.evaluate()
+        self.parent.join()
         for currGen in range(const.total_generations):
             print(f'PARENT {currGen}: ')
             print(self.parent.weights)
@@ -28,11 +31,12 @@ class Climber():
 
     def evolve_step(self) -> None:
         '''
-        Spawn and mutates a child. Selects the best between parent and child.
+        Spawns and mutates a child. Selects the best between parent and child.
         '''
         self.spawn()
         self.mutate()
         self.child.evaluate()
+        self.child.join()
         print('')
         print(f'PARENT: {self.parent.fitness}; CHILD: {self.child.fitness}')
         print('='*15)
@@ -58,7 +62,7 @@ class Climber():
             self.parent = self.child
 
 class Solution():
-    def __init__(self,  weights=None) -> None:
+    def __init__(self,  weights: np.ndarray | None = None) -> None:
         if weights is None:
             self.weights = 2*np.random.randn(3, 2)
         else:
@@ -66,7 +70,7 @@ class Solution():
         self.L, self.W, self.H = 1,1,1
         self.X, self.Y, self.Z = 0,0, self.H/2
 
-    def evaluate(self) -> None:
+    def evaluate(self, args=[]) -> None:
         '''
         Calculates the fitness of the current solution
         and saves it to a file fitness.txt.
@@ -74,9 +78,15 @@ class Solution():
         self.Create_World()
         self.Create_Robot(1.5,0,1.5)
         self.Create_Brain()
-        system('python3 simulate.py')
-        with open('fitness.txt', 'r') as f:
-            self.fitness = float(f.read())     
+        self.parent_connection, child_connection = Pipe()
+        self.sim = Process(target=simulate.main, args=(args, child_connection))
+        self.sim.start()
+
+    def join(self) -> None:
+        self.sim.join()
+        self.fitness = self.parent_connection.recv()
+        del self.parent_connection
+        del self.sim
 
     def mutate(self) -> None:
         '''
@@ -129,12 +139,14 @@ class Solution():
                 pyrosim.Send_Synapse( sourceNeuronName = sensor , targetNeuronName = motor , weight = self.weights[sensor][motor-3] )
         pyrosim.End()
 
-if '__name__' == '__main__':
+if __name__ == '__main__':
     climber = Climber()
     climber.evolve()
 
     weights = np.loadtxt('weights.csv', delimiter=',')
-    Solution(weights[0])
-    system('python3 simulate.py -g')
-    Solution(weights[-1])
-    system('python3 simulate.py -g')
+    s1 = Solution(weights[0])
+    s1.evaluate(['--gui'])
+    s1.join()
+    s2 = Solution(weights[-1])
+    s2.evaluate(['--gui'])
+    s2.join()

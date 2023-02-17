@@ -17,6 +17,7 @@ class Simulation:
         self.id = id
         if connection == 'GUI':
             self.physicsClient = p.connect(p.GUI)
+            p.configureDebugVisualizer(p.COV_ENABLE_GUI,0)
             self.useGUI = True
         else:
             self.physicsClient = p.connect(p.DIRECT)

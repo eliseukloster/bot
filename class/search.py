@@ -74,7 +74,7 @@ class Solution():
         self.L, self.W, self.H = 1,1,1
         self.X, self.Y, self.Z = 0,0, self.H/2
 
-    def evaluate(self, args=[]) -> None:
+    def evaluate(self, args: list = []) -> None:
         '''
         Calculates the fitness of the current solution
         and saves it to a file fitness.txt.

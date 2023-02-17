@@ -17,5 +17,5 @@ save = False
 total_iterations = 5000
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
-total_generations = 50
-population = 20
+total_generations = 5
+population = 50

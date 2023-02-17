@@ -3,23 +3,30 @@ import constants as const
 from multiprocessing import Process
 import numpy as np
 import supress
+import argparse
 
-def main():
-    processes = []
-    for i in range(const.population):
-        climber = search.Climber(i)
-        process = Process(target=climber.evolve)
-        #with supress.stdout_redirected():
-        process.start()
-        processes.append(process)
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--climb', action='store_true', help='Run a new simulation instead of loading the current directory files.')
+
+def main(climb: bool = True):
+    if climb:
+        print('CLIMB')
+        processes = []
+        for i in range(const.population):
+            climber = search.Climber(i)
+            process = Process(target=climber.evolve)
+            #with supress.stdout_redirected():
+            process.start()
+            processes.append(process)
+
+        for i, process in enumerate(processes):
+            process.join()
 
     weightss = np.empty((const.population, 6))
     fitnesses = np.empty(const.population)
-    for i, process in enumerate(processes):
-        process.join()
+    for i in range(const.population):
         weights = np.loadtxt(f'weights{i}.csv', delimiter=',')
         weightss[i, :] = weights[-1]
-
         s = search.Solution(0, weights[-1])
         s.evaluate()
         s.join()
@@ -27,6 +34,13 @@ def main():
     return weightss, fitnesses
 
 if __name__ == '__main__':
-    weightss, fitnesses = main()
+    args = parser.parse_args()
+    weightss, fitnesses = main(args.climb)
+    print('WEIGHT')
     print(weightss)
+    print('FITNESS')
     print(fitnesses)
+    with supress.stdout_redirected():
+        s = search.Solution(0, weightss[np.argmin(fitnesses)])
+        s.evaluate(['--gui'])
+        s.join()

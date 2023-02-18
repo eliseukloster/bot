@@ -10,7 +10,6 @@ parser.add_argument('-c', '--climb', action='store_true', help='Run a new simula
 
 def main(climb: bool = True):
     if climb:
-        print('CLIMB')
         processes = []
         for i in range(const.population):
             climber = search.Climber(i)
@@ -34,8 +33,12 @@ def main(climb: bool = True):
     return weightss, fitnesses
 
 if __name__ == '__main__':
+    import time
     args = parser.parse_args()
+    start = time.perf_counter()
     weightss, fitnesses = main(args.climb)
+    elapsed = time.perf_counter() - start
+    print(f'TOTAL TIME: {elapsed:0.2f} seconds.')
     print('WEIGHT')
     print(weightss)
     print('FITNESS')

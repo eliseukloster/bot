@@ -40,7 +40,12 @@ class Simulation:
             self.robot.act(i)
             if self.useGUI:
                 sleep(const.tickRateSeconds)
-                p.resetDebugVisualizerCamera( cameraDistance=9, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[-0.005*i,0,0])
+                if i % const.camera_period == 0:
+                    self.robot.get_fitness()
+                    p.resetDebugVisualizerCamera( cameraDistance=9, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[self.robot.xyz[0],self.robot.xyz[1]-3,0])
+                else:
+                    p.resetDebugVisualizerCamera( cameraDistance=9, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[self.robot.xyz[0]-0.005*(i%const.camera_period),self.robot.xyz[1]-3,0])
+
         if const.save:
             self.robot.save_sensors()
             self.robot.save_motors()
@@ -121,7 +126,7 @@ class Robot:
                 pyrosim.Set_Motor_For_Joint(bodyIndex = self.id,
                         jointName = bytes(jointName, 'utf-8'),
                         controlMode = p.POSITION_CONTROL,
-                        targetPosition = desiredAngle,
+                        targetPosition = desiredAngle * const.motorRange,
                         maxForce = 50)
                 self.motors[bytes(jointName, 'utf-8')].values[i] = desiredAngle
 
@@ -144,6 +149,7 @@ class Robot:
         '''
         xyz = p.getLinkState(self.id,0)[0]
         xCoordinateLink0 = xyz[0]
+        self.xyz = xyz
         #with open('fitness.txt', 'w') as f:
         #    f.write(str(xCoordinateLink0))
         return xCoordinateLink0

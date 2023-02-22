@@ -21,7 +21,7 @@ def main(climb: bool = True):
         for i, process in enumerate(processes):
             process.join()
 
-    weightss = np.empty((const.population, 6))
+    weightss = np.empty((const.population, const.nSensorNeurons*const.nMotorNeurons))
     fitnesses = np.empty(const.population)
     for i in range(const.population):
         weights = np.loadtxt(f'weights{i}.csv', delimiter=',')

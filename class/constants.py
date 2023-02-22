@@ -14,10 +14,15 @@ def npsave(name: str, data: np.ndarray) -> None:
 
 savepath = 'data/'
 save = False
-total_iterations = 1000
+total_iterations = 2000
+camera_period = 1
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
-total_generations = 50
+total_generations = 100
 log_frequency = 10
 log_every = 6
 population = 12
+
+nSensorNeurons = 9
+nMotorNeurons = 8
+motorRange = 0.2

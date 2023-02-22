@@ -4,7 +4,7 @@ import supress
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-w', '--weights', type=int, default=0, nargs=1, help='Selects the weights<i>.csv file to load. Default is 0.')
+parser.add_argument('-w', '--weights', type=int, default=[0], nargs=1, help='Selects the weights<i>.csv file to load. Default is 0.')
 
 if __name__ == '__main__':
     args = parser.parse_args()

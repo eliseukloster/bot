@@ -1,6 +1,4 @@
 import search
-import constants as const
-from multiprocessing import Process
 import numpy as np
 import supress
 import argparse

@@ -8,7 +8,10 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--climb', action='store_true', help='Run a new simulation instead of loading the current directory files.')
 
-def main(climb: bool = True):
+def main(climb: bool = True) -> tuple[np.ndarray, float]:
+    '''
+    Spawns multiple hill climbers to parallelize computation.
+    '''
     if climb:
         processes = []
         for i in range(const.population):

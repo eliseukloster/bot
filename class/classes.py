@@ -147,12 +147,11 @@ class Robot:
         '''
         Evaluates the fitness function of the robot.
         '''
-        xyz = p.getLinkState(self.id,0)[0]
-        xCoordinateLink0 = xyz[0]
+        #xyz = p.getLinkState(self.id,0)[0]
+        xyz = p.getBasePositionAndOrientation(self.id)[0]
+        xCoordinate = xyz[0]
         self.xyz = xyz
-        #with open('fitness.txt', 'w') as f:
-        #    f.write(str(xCoordinateLink0))
-        return xCoordinateLink0
+        return xCoordinate
 
 class Sensor:
     '''

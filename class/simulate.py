@@ -9,6 +9,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-g', '--gui', default='', action='store_const', const=['GUI'])
 
 def main(id: int, args=[], connection: Connection | None = None):
+    '''
+    Create a new simulation instance, run it and get the fitness value.
+    '''
     args = parser.parse_args(args)
 
     simulation = Simulation(id, *args.gui)

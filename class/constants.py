@@ -26,3 +26,5 @@ population = 12
 nSensorNeurons = 9
 nMotorNeurons = 8
 motorRange = 0.2
+
+npedes = 4

@@ -18,10 +18,10 @@ total_iterations = 2000
 camera_period = 1
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
-total_generations = 100
+total_generations = 2
 log_frequency = 10
 log_every = 6
-population = 12
+population = 1
 
 nSensorNeurons = 9
 nMotorNeurons = 8

@@ -43,3 +43,4 @@ class VISUAL_URDF:
         Save_Whitespace(self.depth,f)
 
         f.write('</visual>\n')
+

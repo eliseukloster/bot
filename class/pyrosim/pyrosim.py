@@ -4,7 +4,7 @@ from pyrosim.nndf import NNDF
 
 from pyrosim.linksdf  import LINK_SDF
 
-from pyrosim.linkurdf import LINK_URDF
+from pyrosim.linkurdf import LINK_URDF, LINK_URDF_MESH
 
 from pyrosim.model import MODEL
 
@@ -136,44 +136,17 @@ def Send_Cube(name="default",pos=[0,0,0],size=[1,1,1]):
 
 
 # Custom collada mesh
-from pyrosim.commonFunctions import Save_Whitespace
 
-class LINK_URDF_MESH:
-    def __init__(self, path) -> None:
-        self.depth = 1
-        self.path = path
-        self.inertial = None
-        self.visual= None
-        self.collision = None
-    def Save(self,f):
-
-        self.Save_Start_Tag(f)
-
-        self.inertial.Save(f)
-
-        self.visual.Save(f)
-
-        self.collision.Save(f)
-
-        self.Save_End_Tag(f)
-
-    def Save_End_Tag(self,f):
-        Save_Whitespace(self.depth,f)
-        f.write('</link>\n')
-
-    def Save_Start_Tag(self,f):
-        Save_Whitespace(self.depth,f)
-        f.write('<link name="' + self.name + '">\n')
-
-def Send_Mesh(name='default', path=None):
+def Send_Mesh(name='default', pos=[0,0,0],size=[1,1,1], path=None):
     global availableLinkIndex
     global links
-    link = LINK_URDF_MESH(path)
+    link = LINK_URDF_MESH(name, pos, size, path)
     link.Save(f)
     links.append(link)
     linkNamesToIndices[name] = availableLinkIndex
     availableLinkIndex = availableLinkIndex + 1
 
+## end custom collada mesh
 
 def Send_Joint(name,parent,child,type,position,jointAxis):
 

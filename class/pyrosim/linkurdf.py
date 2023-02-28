@@ -1,6 +1,6 @@
 from pyrosim.originurdf      import ORIGIN_URDF
 
-from pyrosim.geometryurdf    import GEOMETRY_URDF
+from pyrosim.geometryurdf    import GEOMETRY_URDF, GEOMETRY_URDF_MESH
 
 from pyrosim.inertialurdf    import INERTIAL_URDF
 
@@ -52,4 +52,38 @@ class LINK_URDF:
 
         Save_Whitespace(self.depth,f)
 
+        f.write('<link name="' + self.name + '">\n')
+
+class LINK_URDF_MESH:
+    def __init__(self, name,pos,size,path) -> None:
+        
+        self.name = name
+        self.depth = 1
+        self.path = path
+        self.origin = ORIGIN_URDF(pos)
+        # Fix later:
+        self.inertial = INERTIAL_URDF(self.origin)
+
+        self.geometry = GEOMETRY_URDF_MESH(size, path)
+
+        self.visual= VISUAL_URDF(self.origin , self.geometry)
+        self.collision = COLLISION_URDF(self.origin , self.geometry)
+    def Save(self,f):
+
+        self.Save_Start_Tag(f)
+
+        self.inertial.Save(f)
+
+        self.visual.Save(f)
+
+        self.collision.Save(f)
+
+        self.Save_End_Tag(f)
+
+    def Save_End_Tag(self,f):
+        Save_Whitespace(self.depth,f)
+        f.write('</link>\n')
+
+    def Save_Start_Tag(self,f):
+        Save_Whitespace(self.depth,f)
         f.write('<link name="' + self.name + '">\n')

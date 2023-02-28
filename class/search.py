@@ -7,6 +7,7 @@ from random import randint
 from multiprocessing import Process
 from multiprocessing.connection import Connection, Pipe
 import simulate
+import create
 
 class Climber():
     '''
@@ -108,13 +109,13 @@ class Solution():
         '''
         Creates a urdf robot with thre cube links and two joints.
         '''
-        pass
+        create.robot(xtorso, ytorso, ztorso, self.id)
 
     def Create_Brain(self) -> None:
         '''
         Creates a neural network for the previously created robot.
         '''
-        pass 
+        create.brain(self.weights, self.id)
 
 if __name__ == '__main__':
     climber = Climber(0)

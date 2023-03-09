@@ -20,3 +20,6 @@ def brain(weights: np.ndarray, id: int) -> None:
     #     for motor in range(const.nSensorNeurons, const.nSensorNeurons+const.nMotorNeurons):
     #         pyrosim.Send_Synapse( sourceNeuronName = sensor , targetNeuronName = motor , weight = weights[sensor][motor-const.nSensorNeurons] )
     pyrosim.End()
+
+if __name__ == '__main__':
+    robot(0,0,0.5,0)

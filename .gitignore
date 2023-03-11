@@ -8,3 +8,4 @@ botenv/
 *.gif
 *.vscode
 pycollada/
+data/

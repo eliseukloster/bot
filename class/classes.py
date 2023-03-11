@@ -42,10 +42,10 @@ class Simulation:
                 sleep(const.tickRateSeconds)
                 if i % const.camera_period == 0:
                     self.robot.get_fitness()
-                    #p.resetDebugVisualizerCamera( cameraDistance=9, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[self.robot.xyz[0],self.robot.xyz[1]-3,0])
+                    p.resetDebugVisualizerCamera( cameraDistance=5, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[self.robot.xyz[0],self.robot.xyz[1]-3,0])
                 else:
                     pass
-                    #p.resetDebugVisualizerCamera( cameraDistance=9, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[self.robot.xyz[0]-0.005*(i%const.camera_period),self.robot.xyz[1]-3,0])
+                    p.resetDebugVisualizerCamera( cameraDistance=5, cameraYaw=0, cameraPitch=-25, cameraTargetPosition=[self.robot.xyz[0]-0.005*(i%const.camera_period),self.robot.xyz[1]-3,0])
 
         if const.save:
             self.robot.save_sensors()
@@ -148,11 +148,8 @@ class Robot:
         '''
         Evaluates the fitness function of the robot.
         '''
-        #xyz = p.getLinkState(self.id,0)[0]
-        xyz = p.getBasePositionAndOrientation(self.id)[0]
-        xCoordinate = xyz[0]
-        self.xyz = xyz
-        return xCoordinate
+
+        return const.fitness(self)
 
 class Sensor:
     '''

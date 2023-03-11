@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pybullet as p
 
 def npsave(name: str, data: np.ndarray) -> None:
     '''
@@ -12,25 +13,38 @@ def npsave(name: str, data: np.ndarray) -> None:
     np.save(f'{name}{i}', data)
     print(f'NumPy ndarray saved: {name}{i}.npy')
 
+def fitness(self) -> float:
+    xyz = p.getBasePositionAndOrientation(self.id)[0]
+    xCoordinate = xyz[0]
+    self.xyz = xyz
+    return xCoordinate
+
+def better_fitness(self: float, other: float) -> bool:
+    return self < other
+
+def nlinks() -> int:
+    ns = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    distribution = [2, 3, 4, 3.5, 2, 2, 1, 1, 1]
+    distribution = list(map(lambda x: x/sum(distribution), distribution))
+    choice = np.random.choice(ns, p=distribution)
+    return choice
+
 savepath = 'data/'
 save = False
-total_iterations = 50000
+total_iterations = 5000
 camera_period = 1
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
-total_generations = 100
-log_frequency = 10
-log_every = 6
+total_generations = 30
+log_frequency = 1
+log_every = 30
 population = 12
 
-nSensorNeurons = 9
-nMotorNeurons = 8
 motorRange = 0.2
 
 meanLinkSize = 1
-varianceLinkSize = 0.3
+varianceLinkSize = 0.35
 fLinkSize = abs
 
-nLinks = 3
-
+probability_neurons = {'motor': 0.9, 'sensor': 0.7}
 colors = {True: '0 0.5 1.0 1.0', False: '1.0 0 0 1.0'}

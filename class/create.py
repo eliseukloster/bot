@@ -3,6 +3,7 @@ import constants as const
 from dataclasses import dataclass, field, InitVar
 from random import choice, randint
 import numpy as np
+from functools import partial
 
 def random_size() -> list[float]:
     #return [1,1,1]
@@ -20,8 +21,8 @@ def collide_1d(boundsa, boundsb, direction):
     else:
         return False
 
-def random_bool() -> bool:
-    return choice((True, False))
+def random_neuron(type: str) -> bool:
+    return np.random.choice((True, False), p=(const.probability_neurons[type], 1-const.probability_neurons[type]))
 
 @dataclass
 class Joint:
@@ -34,7 +35,7 @@ class Joint:
     type: str = 'revolute'
     axis: list[int] = field(default_factory=random_axis)
     coords_type: str = 'relative'
-    neuron: bool = field(default_factory = random_bool)
+    neuron: bool = field(default_factory = partial(random_neuron, type='motor'))
 
     def __post_init__(self, upstream_joint_abs_position: list[int] | None):
         self.name_str = f'{self.parent}_{self.child}'
@@ -71,7 +72,7 @@ class Link:
     upstream_joint_abs_position: list[int] | None = None
     size: list[float] = field(default_factory = random_size)
     coords_type: str = 'relative'
-    neuron: bool = field(default_factory = random_bool)
+    neuron: bool = field(default_factory = partial(random_neuron, type='sensor'))
 
     def __post_init__(self):
         self.name_str = str(self.name)
@@ -91,7 +92,6 @@ class Link:
             self.free_directions.remove((self.joint_coord_axis, self.joint_coord_axis_sign))
 
     def send(self) -> None:
-        print(const.colors[self.neuron])
         pyrosim.Send_Cube(
             name = self.name_str,
             pos = self.position,
@@ -100,7 +100,7 @@ class Link:
         )
     def send_neuron(self, n: int) -> int:
         if self.neuron:
-            pyrosim.Send_Sensor_Neuron(name = n , jointName = self.name_str)
+            pyrosim.Send_Sensor_Neuron(name = n , linkName = self.name_str)
             return n+1
         else:
             return n
@@ -204,55 +204,95 @@ def link_from_joint(joint: Joint):
     return link
 
 
-def Create_Robot(self, xtorso: float, ytorso: float, ztorso: float) -> None:
+def Create_Robot(id: int, nLinks:int, links: list[Link] | None = None, joints: list[Joint] | None = None,
+                 xtorso: float | None = None, ytorso: float | None = None, ztorso: float | None = None) -> tuple[list[Link], list[Joint]]:
     '''
     Creates a urdf robot with thre cube links and two joints.
     '''
-    link0 = Link(
-        name = 0,
-        position = [0,0,0.5],
-        upstream_joint_abs_position = None,
-        coords_type = 'absolute',
-    )
-    links = [link0]
-    joints = []
-    for i in range(1, const.nLinks):
-        joint = joint_from_links(links)
-        link = link_from_joint(joint)
-        collide = check_all_collisions(link, links)
-        while collide:
+    if links is None and joints is None:
+        size = random_size()
+        if xtorso is None:
+            xtorso = 0
+        if ytorso is None:
+            ytorso = 0
+        if ztorso is None:
+            ztorso = size[2]/2
+        link0 = Link(
+            name = 0,
+            position = [xtorso,ytorso,ztorso],
+            upstream_joint_abs_position = None,
+            coords_type = 'absolute',
+            size = size
+        )
+        links = [link0]
+        joints = []
+        for i in range(1, nLinks):
             joint = joint_from_links(links)
             link = link_from_joint(joint)
             collide = check_all_collisions(link, links)
-        joints.append(joint)
-        #links[joint.parent].accept()
-        links.append(link)
+            while collide:
+                joint = joint_from_links(links)
+                link = link_from_joint(joint)
+                collide = check_all_collisions(link, links)
+            joints.append(joint)
+            #links[joint.parent].accept()
+            links.append(link)
 
-    zmin = 0
-    for link in links:
-        zmin = min(zmin, link.bounds['z'][0])
-    
-    pyrosim.Start_URDF(f'body{self.id}.urdf')
-    for link in links:
-        if link.coords_type == 'absolute':
-            link.position[2] += -zmin
-        link.send()
-        print(link.neuron)
-    for joint in joints:
-        if joint.coords_type == 'absolute':
-            joint.position[2] += -zmin
-        joint.send()
-    pyrosim.End()
+        zmin = 0
+        for link in links:
+            zmin = min(zmin, link.bounds['z'][0])
+        pyrosim.Start_URDF(f'body{id}.urdf')
+        for link in links:
+            if link.coords_type == 'absolute':
+                link.position[2] += -zmin
+            link.send()
+        for joint in joints:
+            if joint.coords_type == 'absolute':
+                joint.position[2] += -zmin
+            joint.send()
+        pyrosim.End()
+        return links, joints
+    else:
+        pyrosim.Start_URDF(f'body{id}.urdf')
+        for link in links:
+            link.send()
+        for joint in joints:
+            joint.send()
+        pyrosim.End()
+        return links, joints
 
-def Create_Brain(self) -> None:
+def Create_Brain(id: int, links: list[Link], joints: list[Joint], weights: np.ndarray | None = None) -> np.ndarray:
     '''
     Creates a neural network for the previously created robot.
     '''
-    pyrosim.Start_NeuralNetwork(f'brain{self.id}.nndf')
-    for sensor in range(const.nSensorNeurons):
-        for motor in range(const.nSensorNeurons, const.nSensorNeurons+const.nMotorNeurons):
-            pyrosim.Send_Synapse( sourceNeuronName = sensor , targetNeuronName = motor , weight = self.weights[sensor][motor-const.nSensorNeurons] )
+    pyrosim.Start_NeuralNetwork(f'brain{id}.nndf')
+    n = 0
+    nsensors = 0
+    nmotors = 0
+    for link in links:
+        if link.neuron:
+            n = link.send_neuron(n)
+            nsensors += 1
+    for joint in joints:
+        if joint.neuron:
+            n = joint.send_neuron(n)
+            nmotors +=1
+
+    # if nsensors == 0:
+    #     links[randint(0, len(links)-1)].neuron = True
+    #     nsensors+=1
+    # if nmotors == 0:
+    #     joints[randint(0, len(joints)-1)].neuron = True
+    #     nmotors+=1
+
+    if weights is None:
+        weights = 2*np.random.randn(nsensors, nmotors)
+    for sensor in range(nsensors):
+        for motor in range(nsensors, nsensors+nmotors):
+            pyrosim.Send_Synapse( sourceNeuronName = sensor , targetNeuronName = motor , weight = weights[sensor][motor-nsensors] )
     pyrosim.End()
+
+    return weights
 
 if __name__ == '__main__':
     pass

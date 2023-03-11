@@ -14,7 +14,7 @@ def npsave(name: str, data: np.ndarray) -> None:
 
 savepath = 'data/'
 save = False
-total_iterations = 1000
+total_iterations = 50000
 camera_period = 1
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
@@ -28,5 +28,9 @@ nMotorNeurons = 8
 motorRange = 0.2
 
 meanLinkSize = 1
-varianceLinkSize = 1
+varianceLinkSize = 0.3
 fLinkSize = abs
+
+nLinks = 3
+
+colors = {True: '0 0.5 1.0 1.0', False: '1.0 0 0 1.0'}

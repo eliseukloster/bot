@@ -5,7 +5,7 @@ from random import choice, randint
 import numpy as np
 
 def random_size() -> list[float]:
-    return [1,1,1]
+    #return [1,1,1]
     return [const.fLinkSize(const.varianceLinkSize*np.random.randn()+const.meanLinkSize) for i in [0,1,2]]
 
 def random_axis() -> list[float]:
@@ -20,7 +20,8 @@ def collide_1d(boundsa, boundsb, direction):
     else:
         return False
 
-
+def random_bool() -> bool:
+    return choice((True, False))
 
 @dataclass
 class Joint:
@@ -33,7 +34,7 @@ class Joint:
     type: str = 'revolute'
     axis: list[int] = field(default_factory=random_axis)
     coords_type: str = 'relative'
-    neuron: bool = field(default_factory = lambda: choice([True, False]))
+    neuron: bool = field(default_factory = random_bool)
 
     def __post_init__(self, upstream_joint_abs_position: list[int] | None):
         self.name_str = f'{self.parent}_{self.child}'
@@ -70,7 +71,7 @@ class Link:
     upstream_joint_abs_position: list[int] | None = None
     size: list[float] = field(default_factory = random_size)
     coords_type: str = 'relative'
-    neuron: bool = field(default_factory = lambda: choice((True, False)))
+    neuron: bool = field(default_factory = random_bool)
 
     def __post_init__(self):
         self.name_str = str(self.name)
@@ -90,10 +91,12 @@ class Link:
             self.free_directions.remove((self.joint_coord_axis, self.joint_coord_axis_sign))
 
     def send(self) -> None:
+        print(const.colors[self.neuron])
         pyrosim.Send_Cube(
             name = self.name_str,
             pos = self.position,
-            size = self.size
+            size = self.size,
+            color = const.colors[self.neuron]
         )
     def send_neuron(self, n: int) -> int:
         if self.neuron:
@@ -148,6 +151,7 @@ def joint_from_links(links: list[Link]):
     for axis in (0,1,2):
         if axis != joint_coord_axis:
             position[axis] = choice((-1,1)) * np.random.rand() * parent_link.size[axis]/2
+            #position[axis] = 0
 
     # 
     if parent == 0:
@@ -186,6 +190,7 @@ def link_from_joint(joint: Joint):
     for axis in (0,1,2):
         if axis != joint_coord_axis:
             position[axis] = choice((-1,1)) * np.random.rand() * size[axis]/2
+            #position[axis] = 0
 
     link = Link(
         name = name,
@@ -199,7 +204,6 @@ def link_from_joint(joint: Joint):
     return link
 
 
-nLinks =   20
 def Create_Robot(self, xtorso: float, ytorso: float, ztorso: float) -> None:
     '''
     Creates a urdf robot with thre cube links and two joints.
@@ -212,7 +216,7 @@ def Create_Robot(self, xtorso: float, ytorso: float, ztorso: float) -> None:
     )
     links = [link0]
     joints = []
-    for i in range(1, nLinks):
+    for i in range(1, const.nLinks):
         joint = joint_from_links(links)
         link = link_from_joint(joint)
         collide = check_all_collisions(link, links)
@@ -221,21 +225,22 @@ def Create_Robot(self, xtorso: float, ytorso: float, ztorso: float) -> None:
             link = link_from_joint(joint)
             collide = check_all_collisions(link, links)
         joints.append(joint)
-        links[joint.parent].accept()
+        #links[joint.parent].accept()
         links.append(link)
 
     zmin = 0
     for link in links:
-        zmin = min(link.bounds['z'][0], zmin)
-    print(-zmin)
-    links[0].position[2] += -zmin
-    joints[0].position[2] += -zmin
+        zmin = min(zmin, link.bounds['z'][0])
+    
     pyrosim.Start_URDF(f'body{self.id}.urdf')
     for link in links:
+        if link.coords_type == 'absolute':
+            link.position[2] += -zmin
         link.send()
-        print(link.position)
-        print(link.bounds)
+        print(link.neuron)
     for joint in joints:
+        if joint.coords_type == 'absolute':
+            joint.position[2] += -zmin
         joint.send()
     pyrosim.End()
 

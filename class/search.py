@@ -102,7 +102,7 @@ class Solution():
         Creates a new sdf world with a box.
         '''
         pyrosim.Start_SDF(f'world{self.id}.sdf')
-        pyrosim.Send_Cube(name=f'Box', pos=[self.X-5,self.Y-5,self.Z], size=[self.L,self.W,self.H])
+        pyrosim.Send_Cube(name=f'Box', pos=[self.X-5,self.Y-5,self.Z], size=[self.L,self.W,self.H], color = '0.7 0.7 0.7 1.0')
         pyrosim.End()
 
     def Create_Robot(self, xtorso: float, ytorso: float, ztorso: float) -> None:

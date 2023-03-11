@@ -5,6 +5,7 @@ import numpy as np
 import supress
 import argparse
 import pickle
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--climb', action='store_true', help='Run a new simulation instead of loading the current directory files.')
@@ -33,7 +34,7 @@ def main(climb: bool = True) -> tuple[np.ndarray, float]:
     jointss = []
     fitnesses = []
     nlinkss = []
-    for i in range(const.population):
+    for i in tqdm(range(const.population)):
         
         weightss = np.load(const.savepath+f'weights{i}.npy', allow_pickle=False)
         weights = weightss[:, :, -1]

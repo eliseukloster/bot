@@ -142,6 +142,9 @@ if __name__ == '__main__':
 
     import supress
     with supress.stdout_redirected():
-        s1 = Solution(0, 100, None, None, None)
-        s1.evaluate(['--gui'])
-        s1.join()
+        try:
+            s1 = Solution(0, 100, None, None, None)
+            s1.evaluate(['--gui'])
+            s1.join()
+        except EOFError as e:
+            pass

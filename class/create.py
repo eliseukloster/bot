@@ -1,7 +1,7 @@
 import pyrosim.pyrosim as pyrosim
 import constants as const
 from dataclasses import dataclass, field, InitVar
-from random import choice
+from random import choice, randint
 import numpy as np
 
 def random_size() -> list[float]:
@@ -27,20 +27,20 @@ class Joint:
     parent: int
     child: int
     position: list[float]
-    face_direction: int
-    face_sign: int
+    joint_coord_axis: int
+    joint_coord_axis_sign: int
+    upstream_joint_abs_position: InitVar[list[int] | None] = None
     type: str = 'revolute'
-    prev_abs_position: InitVar[list[int] | None] = None
     axis: list[int] = field(default_factory=random_axis)
     coords_type: str = 'relative'
     neuron: bool = field(default_factory = lambda: choice([True, False]))
 
-    def __post_init__(self, prev_abs_position: list[int] = None):
+    def __post_init__(self, upstream_joint_abs_position: list[int] | None):
         self.name_str = f'{self.parent}_{self.child}'
         self.axis_str = ' '.join(map(str, self.axis))
         self.parent_str, self.child_str = str(self.parent), str(self.child)
         if self.coords_type == 'relative':
-            self.position_abs = [self.position[i]+prev_abs_position[i] for i in (0,1,2)]
+            self.position_abs = [self.position[i]+upstream_joint_abs_position[i] for i in (0,1,2)]
         else:
             self.position_abs = self.position
 
@@ -60,37 +60,22 @@ class Joint:
         else:
             return n
 
-    def choose_link_position_size(self) -> tuple[list[int],list[int]]:
-        size = random_size()
-
-        position = [0,0,0]
-        #face_direction = choice((0,1,2))
-
-        #position[face_direction] = choice((-1,1)) * size[face_direction]/2
-        position[self.face_direction] = self.face_sign * size[self.face_direction]/2
-
-        for direction in (0,1,2):
-            if direction != self.face_direction:
-                position[direction] = choice((-1,1))  * np.random.rand() * size[direction]/2
-
-        return position, size, self.face_sign, self.face_direction
-
 
 @dataclass
 class Link:
     name: int
     position: list[float]
-    face_direction: int
-    face_sign: int
-    prev_abs_position: InitVar[list[int] | None] = None
+    joint_coord_axis: int = None
+    joint_coord_axis_sign: int = None
+    upstream_joint_abs_position: list[int] | None = None
     size: list[float] = field(default_factory = random_size)
-    neuron: bool = field(default_factory = lambda: choice((True, False)))
     coords_type: str = 'relative'
+    neuron: bool = field(default_factory = lambda: choice((True, False)))
 
-    def __post_init__(self, prev_abs_position: list[int] = None):
+    def __post_init__(self):
         self.name_str = str(self.name)
         if self.coords_type == 'relative':
-            self.position_abs = [self.position[i]+prev_abs_position[i] for i in (0,1,2)]
+            self.position_abs = [self.position[i]+self.upstream_joint_abs_position[i] for i in (0,1,2)]
         else:
             self.position_abs = self.position
 
@@ -99,6 +84,10 @@ class Link:
         boundz = (self.position_abs[2] - self.size[2]/2, self.position_abs[2] + self.size[2]/2)
 
         self.bounds = {'x': boundx, 'y': boundy, 'z': boundz}
+
+        self.free_directions = set([(i, 1) for i in (0,1,2)] + [(i,-1) for i in (0,1,2)])
+        if self.joint_coord_axis is not None and self.joint_coord_axis_sign is not None:
+            self.free_directions.remove((self.joint_coord_axis, self.joint_coord_axis_sign))
 
     def send(self) -> None:
         pyrosim.Send_Cube(
@@ -113,23 +102,13 @@ class Link:
         else:
             return n
         
-    def choose_joint_position(self) -> tuple[list[int],int,int]:
-        position = [0,0,0]
+    def free_direction(self) -> tuple[int, int]:
+        free = choice(list(self.free_directions))
+        self.free = free
+        return free
+    def accept(self) -> None:
+        self.free_directions.remove(self.free)
 
-        found = False
-        while not found:
-            face_direction = choice((0,1,2))
-            face_sign = choice((-1,1))
-            if face_direction != self.face_direction and face_sign != -self.face_sign:
-                found = True
-
-        position[face_direction] = face_sign * self.size[face_direction]/2
-
-        for direction in (0,1,2):
-            if direction != face_direction:
-                position[direction] = choice((-1,1))  * np.random.rand() * self.size[direction]/2
-        return position, face_sign, face_direction
-    
     def check_collision(self, other) -> bool:
         boundsa = self.bounds
         boundsb = other.bounds
@@ -137,67 +116,125 @@ class Link:
         if (collide_1d(boundsa, boundsb, 'x') and 
             collide_1d(boundsa, boundsb, 'y') and 
             collide_1d(boundsa, boundsb, 'z')):
-            print(boundsa)
-            print(boundsb)
             return True
         else:
-            print(boundsa)
-            print(boundsb)
             return False 
 
 def check_all_collisions(self: Link, links: list[Link]):
     collide = False
     for other in links:
         collide = self.check_collision(other) or collide
-        print(collide)
         if collide:
             return collide
     return collide
 
-nLinks = 4
+
+def joint_from_links(links: list[Link]):
+
+    total_links = len(links)
+    
+    child = total_links
+    parent = randint(0,total_links-1)
+    parent_link = links[parent]
+    
+    position = [0,0,0]
+
+    # Choose a free direction for joitns in the parent link
+    joint_coord_axis, joint_coord_axis_sign = parent_link.free_direction()
+
+    # Add coordinates relative to the center of the parent link
+    position[joint_coord_axis] = joint_coord_axis_sign * parent_link.size[joint_coord_axis]/2
+
+    for axis in (0,1,2):
+        if axis != joint_coord_axis:
+            position[axis] = choice((-1,1)) * np.random.rand() * parent_link.size[axis]/2
+
+    # 
+    if parent == 0:
+        coords_type = 'absolute'
+        position = [position[i] + parent_link.position_abs[i] for i in (0,1,2)]
+        upstream_joint_abs_position = None
+    else:
+        coords_type = 'relative'
+        position = [position[i] + parent_link.position[i] for i in (0,1,2)]
+        upstream_joint_abs_position = parent_link.upstream_joint_abs_position
+    
+    joint = Joint(
+        parent = parent,
+        child = child,
+        position = position,
+        coords_type = coords_type,
+        joint_coord_axis = joint_coord_axis,
+        joint_coord_axis_sign = joint_coord_axis_sign,
+        upstream_joint_abs_position = upstream_joint_abs_position
+    )
+
+    return joint
+    
+
+def link_from_joint(joint: Joint):
+    name = joint.child
+    upstream_joint_abs_position = joint.position_abs
+    joint_coord_axis = joint.joint_coord_axis
+    joint_coord_axis_sign = joint.joint_coord_axis_sign
+    size = random_size()
+
+    position = [0,0,0]
+    # Add coordinates relative to the upstream joint
+    position[joint_coord_axis] = joint_coord_axis_sign * size[joint_coord_axis]/2
+
+    for axis in (0,1,2):
+        if axis != joint_coord_axis:
+            position[axis] = choice((-1,1)) * np.random.rand() * size[axis]/2
+
+    link = Link(
+        name = name,
+        position = position,
+        upstream_joint_abs_position = upstream_joint_abs_position,
+        joint_coord_axis = joint_coord_axis,
+        joint_coord_axis_sign = joint_coord_axis_sign,
+        size = size
+    )
+
+    return link
 
 
+nLinks =   20
 def Create_Robot(self, xtorso: float, ytorso: float, ztorso: float) -> None:
     '''
     Creates a urdf robot with thre cube links and two joints.
     '''
-
-    link0 = Link(name = 0, position = [0,0,0.5], coords_type ='absolute', face_direction=2, face_sign=1)
-    joint0 = Joint(parent = 0, child = 1, position = [0,0,1], coords_type = 'absolute', face_direction=2, face_sign=1)
+    link0 = Link(
+        name = 0,
+        position = [0,0,0.5],
+        upstream_joint_abs_position = None,
+        coords_type = 'absolute',
+    )
     links = [link0]
-    joints = [joint0]
-
-    for i in range(1,nLinks-1):
-        collide  = True
-        count = 0
-        while collide and count < 20:
-            count +=1
-            position, size, face_sign, face_direction = joints[i-1].choose_link_position_size()
-            link = Link(name=i, position=position, size=size, prev_abs_position = joints[i-1].position_abs, face_sign=face_sign, face_direction=face_direction)
-            print(link)
+    joints = []
+    for i in range(1, nLinks):
+        joint = joint_from_links(links)
+        link = link_from_joint(joint)
+        collide = check_all_collisions(link, links)
+        while collide:
+            joint = joint_from_links(links)
+            link = link_from_joint(joint)
             collide = check_all_collisions(link, links)
+        joints.append(joint)
+        links[joint.parent].accept()
         links.append(link)
 
-        position, face_sign, face_direction = link.choose_joint_position()
-        joint = Joint(parent = i, child = i+1, position = position, prev_abs_position = joints[i-1].position_abs, face_sign=face_sign, face_direction=face_direction)
-        joints.append(joint)
-        print(joint)
-
-    collide  = True
-    count = 0
-    while collide and count < 20:
-        count +=1
-        positionn, sizen, face_signn, face_directionn = joints[nLinks-2].choose_link_position_size()
-        link = Link(name=nLinks-1, position=positionn, size=sizen, prev_abs_position = joints[nLinks-2].position_abs, face_sign=face_signn, face_direction=face_directionn, )
-        collide = check_all_collisions(link, links)
-    
-    links.append(link)
-    print(links)
-    print(joints)
-
+    zmin = 0
+    for link in links:
+        zmin = min(link.bounds['z'][0], zmin)
+    print(-zmin)
+    links[0].position[2] += -zmin
+    joints[0].position[2] += -zmin
     pyrosim.Start_URDF(f'body{self.id}.urdf')
     for link in links:
         link.send()
+        print(link.position)
+        print(link.bounds)
     for joint in joints:
         joint.send()
     pyrosim.End()

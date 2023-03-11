@@ -271,19 +271,24 @@ def Create_Brain(id: int, links: list[Link], joints: list[Joint], weights: np.nd
     nmotors = 0
     for link in links:
         if link.neuron:
-            n = link.send_neuron(n)
             nsensors += 1
     for joint in joints:
         if joint.neuron:
-            n = joint.send_neuron(n)
             nmotors +=1
 
-    # if nsensors == 0:
-    #     links[randint(0, len(links)-1)].neuron = True
-    #     nsensors+=1
-    # if nmotors == 0:
-    #     joints[randint(0, len(joints)-1)].neuron = True
-    #     nmotors+=1
+    if nsensors == 0:
+        links[randint(0, len(links)-1)].neuron = True
+        nsensors+=1
+    if nmotors == 0:
+        joints[randint(0, len(joints)-1)].neuron = True
+        nmotors+=1
+
+    for link in links:
+        if link.neuron:
+            n = link.send_neuron(n)
+    for joint in joints:
+        if joint.neuron:
+            n = joint.send_neuron(n)
 
     if weights is None:
         weights = 2*np.random.randn(nsensors, nmotors)

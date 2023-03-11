@@ -37,7 +37,7 @@ gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
 total_generations = 30
 log_frequency = 1
-log_every = 30
+log_every = 2
 population = 12
 
 motorRange = 0.2

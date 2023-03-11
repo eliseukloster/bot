@@ -31,20 +31,24 @@ def nlinks() -> int:
 
 savepath = 'data/'
 save = False
-total_iterations = 50
+total_iterations = 3000
 camera_period = 1
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
-total_generations = 20
+total_generations = 100
 log_frequency = 2
 log_every = 5
-population = 10
+population = 12
 
 motorRange = 0.2
 
 meanLinkSize = 1
-varianceLinkSize = 0.35
+varianceLinkSize = 0.4
 fLinkSize = abs
 
 probability_neurons = {'motor': 0.9, 'sensor': 0.7}
 colors = {True: '0 0.5 1.0 1.0', False: '1.0 0 0 1.0'}
+
+cameraDistance=7
+cameraYaw=0
+cameraPitch=-60

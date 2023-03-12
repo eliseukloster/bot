@@ -1,0 +1,11 @@
+ipython==8.11.0
+lxml==4.9.2
+mock==5.0.1
+numpy==1.23.4
+Pillow==9.4.0
+pybullet==3.2.0
+pyglet==2.0.5
+python_dateutil==2.8.2
+setuptools==65.5.0
+tqdm==4.64.1
+unittest2==1.1.0

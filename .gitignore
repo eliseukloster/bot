@@ -4,6 +4,8 @@ botenv/
 *.sdf
 *.csv
 *.nndf
-*fitness.txt
 *.gif
 *.vscode
+pycollada/
+data/
+__pycache__/

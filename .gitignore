@@ -1,2 +1,11 @@
 botenv/
 *.pyc
+*.urdf
+*.sdf
+*.csv
+*.nndf
+*.gif
+*.vscode
+pycollada/
+data/
+__pycache__/

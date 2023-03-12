@@ -1,2 +1,2 @@
 # bot
-First steps with differentiable robots
+Evolve locomotion for randomly generated robot bodies.

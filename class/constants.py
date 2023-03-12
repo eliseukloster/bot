@@ -31,14 +31,14 @@ def nlinks() -> int:
 
 savepath = 'data/'
 save = False
-total_iterations = 3000
+total_iterations = 10000
 camera_period = 1
 gravity = -9.80665 # CODATA :P
 tickRateSeconds = 1/240
-total_generations = 100
-log_frequency = 2
-log_every = 5
-population = 12
+total_generations = 500
+log_frequency = 50
+log_every = 25
+population = 100
 
 motorRange = 0.2
 

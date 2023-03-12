@@ -34,6 +34,7 @@ def main(climb: bool = True) -> tuple[np.ndarray, float]:
     jointss = []
     fitnesses = []
     nlinkss = []
+    ss = []
     for i in tqdm(range(const.population)):
         
         weightss = np.load(const.savepath+f'weights{i}.npy', allow_pickle=False)
@@ -41,14 +42,17 @@ def main(climb: bool = True) -> tuple[np.ndarray, float]:
         with open(const.savepath+f'robot{i}.pkl', 'rb') as f:
             links, joints = pickle.load(f)
         nlinks = len(links)
-        s = search.Solution(0, nlinks, links, joints, weights)
+        s = search.Solution(i, nlinks, links, joints, weights)
         s.evaluate()
-        s.join()
-        fitnesses.append(s.fitness)
+        ss.append(s)
         weightsss.append(weights)
         linkss.append(links)
         jointss.append(joints)
         nlinkss.append(nlinks)
+
+    for s in tqdm(ss):
+        s.join()
+        fitnesses.append(s.fitness)
 
     return nlinkss, linkss, jointss, weightsss, fitnesses
 
@@ -59,8 +63,8 @@ if __name__ == '__main__':
     nlinkss, linkss, jointss, weightss, fitnesses = main(args.climb)
     elapsed = time.perf_counter() - start
     print(f'TOTAL TIME: {elapsed:0.2f} seconds.')
-    print('WEIGHT')
-    print(np.asarray(weightss))
+    #print('WEIGHT')
+    #print(np.asarray(weightss))
     print('FITNESS')
     print(np.asarray(fitnesses))
     with supress.stdout_redirected():

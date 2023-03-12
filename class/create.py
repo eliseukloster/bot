@@ -6,13 +6,21 @@ import numpy as np
 from functools import partial
 
 def random_size() -> list[float]:
-    #return [1,1,1]
+    '''
+    Generate link size based on a normal distribution post-processed with const.fLinkSize().
+    '''
     return [const.fLinkSize(const.varianceLinkSize*np.random.randn()+const.meanLinkSize) for i in [0,1,2]]
 
 def random_axis() -> list[float]:
+    '''
+    Choose the axis of rotation for a joint.
+    '''
     return choice(([1,0,0], [0,1,0], [0,0,1]))
 
-def collide_1d(boundsa, boundsb, direction):
+def collide_1d(boundsa: dict[list[int]], boundsb: dict[list[int]], direction: str) -> bool:
+    '''
+    Detect 1d collisions.
+    '''
     if boundsa[direction][0] == boundsb[direction][0]:
         return True
     if ((boundsa[direction][0] < boundsb[direction][0] and boundsb[direction][0] < boundsa[direction][1]) or 
@@ -22,10 +30,16 @@ def collide_1d(boundsa, boundsb, direction):
         return False
 
 def random_neuron(type: str) -> bool:
+    '''
+    Selects True or False with probability given by the type of neuron.
+    '''
     return np.random.choice((True, False), p=(const.probability_neurons[type], 1-const.probability_neurons[type]))
 
 @dataclass
 class Joint:
+    '''
+    Joint class.
+    '''
     parent: int
     child: int
     position: list[float]
@@ -65,6 +79,9 @@ class Joint:
 
 @dataclass
 class Link:
+    '''
+    Link class.
+    '''
     name: int
     position: list[float]
     joint_coord_axis: int = None
@@ -123,7 +140,10 @@ class Link:
         else:
             return False 
 
-def check_all_collisions(self: Link, links: list[Link]):
+def check_all_collisions(self: Link, links: list[Link]) -> bool:
+    '''
+    Check if self collides with at least one link in the given list.
+    '''
     collide = False
     for other in links:
         collide = self.check_collision(other) or collide
@@ -131,9 +151,10 @@ def check_all_collisions(self: Link, links: list[Link]):
             return collide
     return collide
 
-
 def joint_from_links(links: list[Link]):
-
+    '''
+    Given a joint, generate a child link attached to it.
+    '''
     total_links = len(links)
     
     child = total_links
@@ -153,7 +174,6 @@ def joint_from_links(links: list[Link]):
             position[axis] = choice((-1,1)) * np.random.rand() * parent_link.size[axis]/2
             #position[axis] = 0
 
-    # 
     if parent == 0:
         coords_type = 'absolute'
         position = [position[i] + parent_link.position_abs[i] for i in (0,1,2)]
@@ -174,9 +194,12 @@ def joint_from_links(links: list[Link]):
     )
 
     return joint
-    
 
 def link_from_joint(joint: Joint):
+    '''
+    Given a link, generate a joint attached to it.
+    '''
+
     name = joint.child
     upstream_joint_abs_position = joint.position_abs
     joint_coord_axis = joint.joint_coord_axis
@@ -203,11 +226,10 @@ def link_from_joint(joint: Joint):
 
     return link
 
-
 def Create_Robot(id: int, nLinks:int, links: list[Link] | None = None, joints: list[Joint] | None = None,
                  xtorso: float | None = None, ytorso: float | None = None, ztorso: float | None = None) -> tuple[list[Link], list[Joint]]:
     '''
-    Creates a urdf robot with thre cube links and two joints.
+    Creates a urdf robot with the specified number of links.
     '''
     if links is None and joints is None:
         size = random_size()
@@ -263,7 +285,7 @@ def Create_Robot(id: int, nLinks:int, links: list[Link] | None = None, joints: l
 
 def Create_Brain(id: int, links: list[Link], joints: list[Joint], weights: np.ndarray | None = None) -> np.ndarray:
     '''
-    Creates a neural network for the previously created robot.
+    Creates a neural network for a previously created robot.
     '''
     pyrosim.Start_NeuralNetwork(f'brain{id}.nndf')
     n = 0

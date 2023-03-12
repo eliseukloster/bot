@@ -124,27 +124,17 @@ class Solution:
         self.weights = create.Create_Brain(self.id, self.links, self.joints, self.weights)
 
 if __name__ == '__main__':
-    # nlinks = const.nlinks()
-    # climber = Climber(0, nlinks)
-    # climber.evolve()
-    # weights = np.load(const.savepath+'weights0.npy', allow_pickle=False)
-    
-    # with open(const.savepath+'robot0.pkl', 'rb') as f:
-    #     links, joints = pickle.load(f)
-    # import supress
-    # with supress.stdout_redirected():
-    #     s1 = Solution(0, nlinks, links, joints, weights[:,:,0])
-    #     s1.evaluate(['--gui'])
-    #     s1.join()
-    #     s2 = Solution(0, nlinks, links, joints, weights[:,:,-1])
-    #     s2.evaluate(['--gui'])
-    #     s2.join()
-
+    nlinks = const.nlinks()
+    climber = Climber(0, nlinks)
+    climber.evolve()
+    weights = np.load(const.savepath+'weights0.npy', allow_pickle=False)
+    with open(const.savepath+'robot0.pkl', 'rb') as f:
+        links, joints = pickle.load(f)
     import supress
     with supress.stdout_redirected():
-        try:
-            s1 = Solution(0, 100, None, None, None)
-            s1.evaluate(['--gui'])
-            s1.join()
-        except EOFError as e:
-            pass
+        s1 = Solution(0, nlinks, links, joints, weights[:,:,0])
+        s1.evaluate(['--gui'])
+        s1.join()
+        s2 = Solution(0, nlinks, links, joints, weights[:,:,-1])
+        s2.evaluate(['--gui'])
+        s2.join()

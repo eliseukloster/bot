@@ -29,7 +29,7 @@ class Simulation:
         for file_name in [f'world{self.id}.sdf', f'body{self.id}.urdf', f'brain{self.id}.nndf']:
             remove(file_name)
     def run(self) -> None:
-        '''self.robot.get_fitness
+        '''
         Runs the simulation by stepping the physics engine
         and executing robot's actions.
         '''

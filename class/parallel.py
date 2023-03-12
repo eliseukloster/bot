@@ -6,11 +6,12 @@ import supress
 import argparse
 import pickle
 from tqdm import tqdm
+from create import Link, Joint
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--climb', action='store_true', help='Run a new simulation instead of loading the current directory files.')
 
-def main(climb: bool = True) -> tuple[np.ndarray, float]:
+def main(climb: bool = True) -> tuple[list[int], list[Link], list[Joint], list[np.ndarray], list[float]]:
     '''
     Spawns multiple hill climbers to parallelize computation.
     '''
@@ -36,12 +37,14 @@ def main(climb: bool = True) -> tuple[np.ndarray, float]:
     nlinkss = []
     ss = []
     for i in tqdm(range(const.population)):
-        
+        # Load all weights history and links for a robot then selects the last set of weights.
         weightss = np.load(const.savepath+f'weights{i}.npy', allow_pickle=False)
         weights = weightss[:, :, -1]
         with open(const.savepath+f'robot{i}.pkl', 'rb') as f:
             links, joints = pickle.load(f)
         nlinks = len(links)
+
+        # Evaluate solution and append information to lists
         s = search.Solution(i, nlinks, links, joints, weights)
         s.evaluate()
         ss.append(s)

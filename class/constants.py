@@ -14,15 +14,24 @@ def npsave(name: str, data: np.ndarray) -> None:
     print(f'NumPy ndarray saved: {name}{i}.npy')
 
 def fitness(self) -> float:
+    '''
+    Evaluates fitness of a robot object self.
+    ''' 
     xyz = p.getBasePositionAndOrientation(self.id)[0]
     xCoordinate = xyz[0]
     self.xyz = xyz
     return xCoordinate
 
 def better_fitness(self: float, other: float) -> bool:
+    ''''
+    Compares fitness values.
+    '''
     return self < other
 
 def nlinks() -> int:
+    '''
+    Defines the probability distribution for number of links in a robot.
+    '''
     ns = [2, 3, 4, 5, 6, 7, 8, 9, 10]
     distribution = [2, 3, 4, 3.5, 2, 2, 1, 1, 1]
     distribution = list(map(lambda x: x/sum(distribution), distribution))
